@@ -1,0 +1,560 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-boxes"></i> Inventario</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button class="btn btn-outline-primary me-2" onclick="exportToExcel()" data-bs-toggle="tooltip" title="Exportar a Excel">
+            <i class="fas fa-file-excel"></i> Exportar
+        </button>
+        <button class="btn btn-outline-success me-2" onclick="printInventory()" data-bs-toggle="tooltip" title="Imprimir reporte">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+        <a href="{% url 'catalogo' %}" class="btn btn-outline-info" data-bs-toggle="tooltip" title="Agregar productos">
+            <i class="fas fa-plus"></i> Agregar Producto
+        </a>
+    </div>
+</div>
+
+<!-- Resumen del Inventario -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow-sm">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Productos Totales</h6>
+                        <h3 class="mb-0">{{ inventario|length }}</h3>
+                    </div>
+                    <i class="fas fa-box fa-2x opacity-75"></i>
+                </div>
+                <small class="opacity-75">Registrados en el sistema</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow-sm">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Stock Total</h6>
+                        <h3 class="mb-0">{{ stock_total|default:0 }}</h3>
+                    </div>
+                    <i class="fas fa-cubes fa-2x opacity-75"></i>
+                </div>
+                <small class="opacity-75">Unidades en inventario</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white shadow-sm">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Valor Inventario</h6>
+                        <h3 class="mb-0">${{ valor_total|floatformat:2|default:"0.00" }}</h3>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                </div>
+                <small class="opacity-75">Valor total a costo</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white shadow-sm">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Bajo Stock (<5)</h6>
+                        <h3 class="mb-0">{{ productos_bajo_stock|default:0 }}</h3>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+                <small class="opacity-75">Necesitan reabastecimiento</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panel de Búsqueda y Filtros -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Búsqueda y Filtros</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-primary text-white"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="search" 
+                           placeholder="Buscar por nombre de producto o marca..." 
+                           value="{{ search_query }}"
+                           id="searchInput">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'inventario_list' %}" class="btn btn-outline-secondary btn-lg w-100">
+                    <i class="fas fa-redo"></i> Limpiar
+                </a>
+            </div>
+        </form>
+        
+        <!-- Filtros Rápidos -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="align-self-center me-2 fw-bold text-muted">Filtrar por:</span>
+                    <a href="{% url 'inventario_list' %}?stock=critico" 
+                       class="btn btn-sm btn-outline-danger {% if request.GET.stock == 'critico' %}active{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i> Stock Crítico (≤ 2)
+                    </a>
+                    <a href="{% url 'inventario_list' %}?stock=bajo" 
+                       class="btn btn-sm btn-outline-warning {% if request.GET.stock == 'bajo' %}active{% endif %}">
+                        <i class="fas fa-exclamation-triangle"></i> Bajo Stock (3-5)
+                    </a>
+                    <a href="{% url 'inventario_list' %}?stock=agotado" 
+                       class="btn btn-sm btn-outline-dark {% if request.GET.stock == 'agotado' %}active{% endif %}">
+                        <i class="fas fa-times-circle"></i> Agotado (0)
+                    </a>
+                    <a href="{% url 'inventario_list' %}?stock=normal" 
+                       class="btn btn-sm btn-outline-success {% if request.GET.stock == 'normal' %}active{% endif %}">
+                        <i class="fas fa-check-circle"></i> Stock Normal (>5)
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-info dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-sort-amount-down"></i> Ordenar
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?sort=nombre">Por Nombre (A-Z)</a></li>
+                            <li><a class="dropdown-item" href="?sort=-nombre">Por Nombre (Z-A)</a></li>
+                            <li><a class="dropdown-item" href="?sort=stock_actual">Stock (Menor a Mayor)</a></li>
+                            <li><a class="dropdown-item" href="?sort=-stock_actual">Stock (Mayor a Menor)</a></li>
+                            <li><a class="dropdown-item" href="?sort=valor_total">Valor (Menor a Mayor)</a></li>
+                            <li><a class="dropdown-item" href="?sort=-valor_total">Valor (Mayor a Menor)</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Inventario -->
+<div class="card shadow">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list"></i> Detalle del Inventario</h5>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="autoRefreshToggle">
+            <label class="form-check-label" for="autoRefreshToggle">Actualización automática</label>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0" id="inventoryTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th width="25%">Producto</th>
+                        <th width="10%">Marca</th>
+                        <th width="8%" class="text-center">Stock Inicial</th>
+                        <th width="8%" class="text-center">Compras</th>
+                        <th width="8%" class="text-center">Ventas</th>
+                        <th width="10%" class="text-center">Stock Actual</th>
+                        <th width="10%" class="text-center">Costo Prom.</th>
+                        <th width="10%" class="text-center">Precio Venta</th>
+                        <th width="11%" class="text-center">Valor Total</th>
+                        <th width="10%" class="text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventario %}
+                    <tr class="inventory-row" data-id="{{ item.id_producto }}" data-stock="{{ item.stock_actual }}">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="product-icon me-2">
+                                    <i class="fas fa-box text-primary"></i>
+                                </div>
+                                <div>
+                                    <strong class="product-name">{{ item.nombre }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-hashtag"></i> ID: {{ item.id_producto }}
+                                        {% if item.ultima_actualizacion %}
+                                        <br><i class="far fa-clock"></i> {{ item.ultima_actualizacion|date:"d/m/Y" }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.marca %}
+                            <span class="badge bg-secondary">{{ item.marca }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark">{{ item.stock_inicial|default:0 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success">{{ item.total_compras|default:0 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-danger">{{ item.total_ventas|default:0 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if item.stock_actual > 10 %}bg-success{% elif item.stock_actual > 5 %}bg-info{% elif item.stock_actual > 2 %}bg-warning{% else %}bg-danger{% endif %} fs-6">
+                                {{ item.stock_actual|default:0 }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="text-muted fw-bold">${{ item.costo_promedio|floatformat:2|default:"0.00" }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="text-primary fw-bold">${{ item.precio_venta|floatformat:2|default:"0.00" }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold text-success">${{ item.valor_total|floatformat:2|default:"0.00" }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if item.stock_actual > 10 %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Disponible
+                            </span>
+                            {% elif item.stock_actual > 5 %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-info-circle"></i> Normal
+                            </span>
+                            {% elif item.stock_actual > 2 %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Bajo
+                            </span>
+                            {% elif item.stock_actual > 0 %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-exclamation-circle"></i> Crítico
+                            </span>
+                            {% else %}
+                            <span class="badge bg-dark">
+                                <i class="fas fa-times-circle"></i> Agotado
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-boxes fa-4x text-muted mb-4"></i>
+                                <h4 class="text-muted">No hay productos en el inventario</h4>
+                                <p class="text-muted mb-4">Comienza agregando productos al catálogo</p>
+                                <a href="{% url 'catalogo' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus-circle"></i> Agregar Productos
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if inventario %}
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="5" class="text-end">TOTALES:</th>
+                        <th class="text-center">
+                            <span class="badge bg-dark fs-6">{{ stock_total|default:0 }}</span>
+                        </th>
+                        <th colspan="2" class="text-center">
+                            <small class="text-muted">Valor promedio</small>
+                        </th>
+                        <th class="text-center text-success fw-bold">
+                            ${{ valor_total|floatformat:2|default:"0.00" }}
+                        </th>
+                        <th class="text-center">
+                            <span class="badge {% if productos_bajo_stock == 0 %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ inventario|length }} productos
+                            </span>
+                        </th>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Mostrando {{ inventario|length }} productos
+                </small>
+            </div>
+            <div class="col-md-6 text-end">
+                <small class="text-muted">
+                    <i class="far fa-clock"></i> Última actualización: 
+                    {% if inventario.0.ultima_actualizacion %}
+                        {{ inventario.0.ultima_actualizacion|date:"d/m/Y H:i" }}
+                    {% else %}
+                        {{ ahora|date:"d/m/Y H:i" }}
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panel de Resumen Bajo Stock -->
+{% if productos_bajo_stock > 0 %}
+<div class="card mt-4 border-warning">
+    <div class="card-header bg-warning text-white">
+        <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Productos que Necesitan Atención</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for item in inventario %}
+                {% if item.stock_actual <= 5 %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card border-{% if item.stock_actual == 0 %}danger{% elif item.stock_actual <= 2 %}danger{% else %}warning{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ item.nombre }}</h6>
+                                    <small class="text-muted">{{ item.marca|default:"Sin marca" }}</small>
+                                </div>
+                                <span class="badge bg-{% if item.stock_actual == 0 %}danger{% elif item.stock_actual <= 2 %}danger{% else %}warning{% endif %} fs-5">
+                                    {{ item.stock_actual }}
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <small>ID: {{ item.id_producto }} | 
+                                Último precio: ${{ item.precio_venta|floatformat:2 }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función para exportar a Excel
+function exportToExcel() {
+    try {
+        // Crear tabla HTML para exportar
+        let table = document.getElementById('inventoryTable');
+        let html = table.outerHTML;
+        
+        // Crear archivo Excel
+        let blob = new Blob([`
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    table { border-collapse: collapse; width: 100%; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    .bg-success { background-color: #d4edda; }
+                    .bg-danger { background-color: #f8d7da; }
+                    .bg-warning { background-color: #fff3cd; }
+                </style>
+            </head>
+            <body>
+                <h2>Reporte de Inventario - ${new Date().toLocaleDateString()}</h2>
+                ${html}
+            </body>
+            </html>
+        `], { type: 'application/vnd.ms-excel' });
+        
+        // Descargar archivo
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = `inventario_${new Date().toISOString().slice(0,10)}.xls`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Mostrar mensaje de éxito
+        showToast('success', 'Exportación exitosa', 'El archivo se está descargando...');
+        
+    } catch (error) {
+        console.error('Error al exportar:', error);
+        showToast('error', 'Error de exportación', 'No se pudo generar el archivo Excel');
+    }
+}
+
+// Función para imprimir
+function printInventory() {
+    // Guardar el HTML original
+    let originalContent = document.body.innerHTML;
+    
+    // Crear contenido optimizado para impresión
+    let printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Reporte de Inventario</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f5f5f5; }
+                .total-row { font-weight: bold; background-color: #f0f0f0; }
+                @media print {
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Reporte de Inventario</h1>
+            <p><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Total Productos:</strong> {{ inventario|length }}</p>
+            <p><strong>Stock Total:</strong> {{ stock_total|default:0 }}</p>
+            <p><strong>Valor Total:</strong> ${{ valor_total|floatformat:2|default:"0.00" }}</p>
+            
+            ${document.getElementById('inventoryTable').outerHTML}
+            
+            <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+                <p>Generado automáticamente por Sistema de Inventario</p>
+                <p>${new Date().toLocaleString()}</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    // Abrir ventana de impresión
+    let printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Esperar a que cargue el contenido antes de imprimir
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+}
+
+// Función para mostrar notificaciones
+function showToast(type, title, message) {
+    // Crear toast dinámicamente
+    let toastId = 'toast-' + Date.now();
+    let toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong><br>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    // Agregar al contenedor de toasts
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.innerHTML += toastHtml;
+    
+    // Mostrar toast
+    let toastElement = document.getElementById(toastId);
+    let toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    // Eliminar después de cerrar
+    toastElement.addEventListener('hidden.bs.toast', function () {
+        toastElement.remove();
+    });
+}
+
+// Auto-refresh toggle
+$(document).ready(function() {
+    // Inicializar tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    
+    // Configurar auto-refresh
+    let autoRefreshInterval = null;
+    $('#autoRefreshToggle').change(function() {
+        if ($(this).is(':checked')) {
+            autoRefreshInterval = setInterval(function() {
+                location.reload();
+            }, 30000); // 30 segundos
+            showToast('info', 'Actualización automática', 'La página se actualizará cada 30 segundos');
+        } else {
+            clearInterval(autoRefreshInterval);
+            showToast('info', 'Actualización automática', 'Desactivada');
+        }
+    });
+    
+    // Resaltar filas con bajo stock
+    $('.inventory-row').each(function() {
+        let stock = parseInt($(this).data('stock')) || 0;
+        if (stock <= 2) {
+            $(this).addClass('table-danger');
+        } else if (stock <= 5) {
+            $(this).addClass('table-warning');
+        }
+    });
+    
+    // Buscar en tiempo real
+    $('#searchInput').on('input', function() {
+        let searchTerm = $(this).val().toLowerCase();
+        $('.inventory-row').each(function() {
+            let productName = $(this).find('.product-name').text().toLowerCase();
+            let productId = $(this).data('id').toString();
+            if (productName.includes(searchTerm) || productId.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+    
+    // Calcular estadísticas adicionales
+    let totalValorVenta = 0;
+    $('.inventory-row').each(function() {
+        let stock = parseInt($(this).data('stock')) || 0;
+        let precioVenta = parseFloat($(this).find('td:nth-child(8) span').text().replace('$', '')) || 0;
+        totalValorVenta += stock * precioVenta;
+    });
+    
+    // Mostrar valor total a precio de venta
+    if (totalValorVenta > 0) {
+        let valorVentaElement = `
+            <div class="card mt-3 border-success">
+                <div class="card-body py-2">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Valor total a costo:</small>
+                            <h5 class="mb-0 text-success">${{ valor_total|floatformat:2|default:"0.00" }}</h5>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Valor potencial a venta:</small>
+                            <h5 class="mb-0 text-primary">$${totalValorVenta.toFixed(2)}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('.card-footer').before(valorVentaElement);
+    }
+});
+</script>
+{% endblock %}

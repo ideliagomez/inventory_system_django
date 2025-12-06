@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Compra{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-shopping-cart"></i> 
+        {% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Compra
+    </h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Número de Factura</label>
+                    {{ form.numero_factura|add_class:"form-control" }}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Fecha</label>
+                    {{ form.fecha|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Proveedor</label>
+                    {{ form.id_proveedor|add_class:"form-control" }}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Producto</label>
+                    {{ form.id_producto|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Costo Total</label>
+                    {{ form.costo_total|add_class:"form-control" }}
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Cantidad</label>
+                    {{ form.cantidad|add_class:"form-control" }}
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Porcentaje de Ganancia (%)</label>
+                    {{ form.porcentaje_ganancia|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Costo Unitario</label>
+                    {{ form.costo_unitario|add_class:"form-control" }}
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Precio de Venta</label>
+                    {{ form.precio|add_class:"form-control" }}
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Ganancia Total</label>
+                    {{ form.ganancia_total|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+                <a href="{% url 'compra_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

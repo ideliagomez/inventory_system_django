@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Nuevo Precio Histórico{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-plus-circle"></i> Nuevo Precio Histórico</h1>
+    <a href="{% url 'historial_precio_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Producto</label>
+                        {{ form.id_producto|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Fecha</label>
+                        {{ form.fecha|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Precio Sugerido</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.precio_sugerido|add_class:"form-control" }}
+                        </div>
+                        <div class="form-text">Precio sugerido de venta</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Precio
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Últimos Precios Registrados</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for precio in ultimos_precios %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ precio.id_producto.nombre }}</h6>
+                            <strong class="text-primary">${{ precio.precio_sugerido|floatformat:2 }}</strong>
+                        </div>
+                        <small class="text-muted">{{ precio.fecha|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-muted">
+                        No hay precios históricos registrados
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

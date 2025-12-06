@@ -1,0 +1,77 @@
+<!-- gestion/templates/gestion/includes/sidebar.html -->
+<div class="position-sticky pt-3">
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>INICIO</span>
+            </h6>
+        </li>
+        
+        <!-- DASHBOARD -->
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+               href="{% url 'dashboard' %}">
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </a>
+        </li>
+        
+        <!-- INVENTARIO -->
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'inventario_list' %}active{% endif %}" 
+               href="{% url 'inventario_list' %}">
+                <i class="fas fa-boxes me-2"></i> Inventario
+            </a>
+        </li>
+        
+        <!-- CATÁLOGO -->
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'catalogo' %}active{% endif %}" 
+               href="{% url 'catalogo' %}">
+                <i class="fas fa-book me-2"></i> Catálogo
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>OPERACIONES</span>
+            </h6>
+        </li>
+        
+        <!-- COMPRAS -->
+        <li class="nav-item">
+            {% with url_name=request.resolver_match.url_name %}
+            <a class="nav-link 
+               {% if 'compra' in url_name and 'historial_precio' not in url_name %}active{% endif %}" 
+               href="{% url 'compra_list' %}">
+                <i class="fas fa-shopping-cart me-2"></i> Compras
+            </a>
+            {% endwith %}
+        </li>
+        
+        <!-- VENTAS -->
+        <li class="nav-item">
+            {% with url_name=request.resolver_match.url_name %}
+            <a class="nav-link 
+               {% if 'venta' in url_name and 'inventario' not in url_name %}active{% endif %}" 
+               href="{% url 'venta_list' %}">
+                <i class="fas fa-cash-register me-2"></i> Ventas
+            </a>
+            {% endwith %}
+        </li>
+        
+        <li class="nav-item">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>CONFIGURACIÓN</span>
+            </h6>
+        </li>
+        
+        <!-- HISTORIAL PRECIOS -->
+        <li class="nav-item">
+            <a class="nav-link 
+               {% if 'historial_precio' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'historial_precio_list' %}">
+                <i class="fas fa-chart-line me-2"></i> Historial Precios
+            </a>
+        </li>
+    </ul>
+</div>
