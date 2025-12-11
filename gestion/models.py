@@ -5,7 +5,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Sum
 from decimal import Decimal
-from .models import Venta
 
 class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)
