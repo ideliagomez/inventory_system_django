@@ -1,72 +1,83 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
+{% load static %}
 
-{% block title %}Catálogo{% endblock %}
+{% block module_name %}catalogo{% endblock %}
+{% block title %}Catálogo del Sistema{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-book"></i> Catálogo</h1>
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <h1><i class="fas fa-book"></i> Catálogo del Sistema</h1>
 </div>
 
-<ul class="nav nav-tabs" id="catalogoTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="productos-tab" data-bs-toggle="tab" data-bs-target="#productos" type="button">
-            <i class="fas fa-box"></i> Productos
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes" type="button">
-            <i class="fas fa-users"></i> Clientes
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="proveedores-tab" data-bs-toggle="tab" data-bs-target="#proveedores" type="button">
-            <i class="fas fa-truck"></i> Proveedores
-        </button>
-    </li>
-</ul>
-
-<div class="tab-content mt-4" id="catalogoTabsContent">
-    <!-- Productos -->
-    <div class="tab-pane fade show active" id="productos">
-        {% include 'gestion/catalogo/productos.html' %}
+<!-- Navegación entre secciones -->
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card card-hover h-100">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-users fa-4x text-primary"></i>
+                </div>
+                <h3 class="card-title">Clientes</h3>
+                <a href="{% url 'clientes_view' %}" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-list"></i> Gestionar Clientes
+                </a>
+            </div>
+        </div>
     </div>
-
-    <!-- Clientes -->
-    <div class="tab-pane fade" id="clientes">
-        {% include 'gestion/catalogo/clientes.html' %}
+    
+    <div class="col-md-4 mb-4">
+        <div class="card card-hover h-100">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-box fa-4x text-success"></i>
+                </div>
+                <h3 class="card-title">Productos</h3>
+                <a href="{% url 'productos_view' %}" class="btn btn-success btn-lg w-100">
+                    <i class="fas fa-list"></i> Gestionar Productos
+                </a>
+            </div>
+        </div>
     </div>
-
-    <!-- Proveedores -->
-    <div class="tab-pane fade" id="proveedores">
-        {% include 'gestion/catalogo/proveedores.html' %}
+    
+    <div class="col-md-4 mb-4">
+        <div class="card card-hover h-100">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-truck fa-4x text-warning"></i>
+                </div>
+                <h3 class="card-title">Proveedores</h3>
+                <a href="{% url 'proveedores_view' %}" class="btn btn-warning btn-lg w-100">
+                    <i class="fas fa-list"></i> Gestionar Proveedores
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<script>
-// Activar la pestaña desde URL
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab');
-    
-    if (tab) {
-        const triggerEl = document.querySelector(`#${tab}-tab`);
-        if (triggerEl) {
-            const tabInstance = new bootstrap.Tab(triggerEl);
-            tabInstance.show();
-        }
-    }
-    
-    // Mantener la pestaña activa al recargar
-    const triggerTabList = document.querySelectorAll('#catalogoTabs button');
-    triggerTabList.forEach(triggerEl => {
-        triggerEl.addEventListener('click', function() {
-            const currentTab = this.getAttribute('data-bs-target').replace('#', '');
-            const url = new URL(window.location);
-            url.searchParams.set('tab', currentTab);
-            window.history.replaceState({}, '', url);
-        });
-    });
-});
-</script>
+<!-- Acciones rápidas -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <a href="{% url 'clientes_view' %}?action=create" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-user-plus"></i> Nuevo Cliente
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'productos_view' %}?action=create" class="btn btn-outline-success w-100 mb-2">
+                    <i class="fas fa-box"></i> Nuevo Producto
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'proveedores_view' %}?action=create" class="btn btn-outline-warning w-100 mb-2">
+                    <i class="fas fa-truck"></i> Nuevo Proveedor
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

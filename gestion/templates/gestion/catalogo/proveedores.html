@@ -1,50 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
 {% load widget_tweaks %}
 
+{% block content %}
 <div class="row">
+    <!-- Columna izquierda: Formulario para crear/editar -->
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-plus"></i> Nuevo Proveedor</h5>
+        <div class="card card-form mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas {% if action == 'edit' %}fa-edit{% else %}fa-truck{% endif %}"></i>
+                    {% if action == 'edit' and proveedor_editando %}
+                        Editar Proveedor: {{ proveedor_editando.empresa }}
+                    {% else %}
+                        Nuevo Proveedor
+                    {% endif %}
+                </h5>
             </div>
             <div class="card-body">
-                <form method="post" action="{% url 'proveedor_create' %}">
+                <form method="post" action="" class="needs-validation" novalidate>
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Empresa</label>
-                        {{ proveedor_form.empresa|add_class:"form-control" }}
+                    
+                    <!-- Campo oculto para identificar proveedor en edición -->
+                    {% if action == 'edit' and proveedor_editando %}
+                        <input type="hidden" name="proveedor_id" value="{{ proveedor_editando.pk }}">
+                    {% endif %}
+                    
+                    <!-- Campos ocultos para mantener parámetros de búsqueda -->
+                    {% if search_query %}
+                        <input type="hidden" name="search" value="{{ search_query }}">
+                    {% endif %}
+                    
+                    <div class="form-group-standard">
+                        <label class="form-label">Empresa *</label>
+                        {{ proveedor_form.empresa|add_class:"form-control"|attr:"required" }}
+                        <div class="invalid-feedback">Por favor ingresa el nombre de la empresa.</div>
                     </div>
-                    <div class="mb-3">
+                    
+                    <div class="form-group-standard">
                         <label class="form-label">Teléfono</label>
                         {{ proveedor_form.telefono|add_class:"form-control" }}
+                        <div class="form-text">Teléfono de contacto</div>
                     </div>
-                    <div class="mb-3">
+                    
+                    <div class="form-group-standard">
                         <label class="form-label">Productos</label>
                         {{ proveedor_form.productos|add_class:"form-control" }}
+                        <div class="form-text">Productos que provee</div>
                     </div>
-                    <button type="submit" class="btn btn-warning w-100">
-                        <i class="fas fa-save"></i> Guardar Proveedor
-                    </button>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary-standard flex-grow-1">
+                            <i class="fas fa-save"></i> 
+                            {% if action == 'edit' %}Actualizar{% else %}Guardar{% endif %} Proveedor
+                        </button>
+                        
+                        {% if action == 'edit' or action == 'create' %}
+                        <a href="?action=list{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-secondary-standard">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        {% endif %}
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Columna derecha: Lista de proveedores -->
     <div class="col-md-8">
-        <div class="card">
+        <div class="card card-list">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Lista de Proveedores ({{ proveedores.count }})</h5>
-                    <div class="input-group" style="width: 300px;">
-                        <input type="text" class="form-control" placeholder="Buscar proveedor..." id="searchProveedores">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="fas fa-search"></i>
-                        </button>
+                    <h5 class="mb-0">
+                        <i class="fas fa-truck-loading me-1"></i>
+                        Lista de Proveedores
+                        <span class="badge badge-standard bg-primary ms-2">
+                            {% if proveedores.paginator %}
+                                {{ proveedores.paginator.count }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </span>
+                    </h5>
+                    <div class="d-flex">
+                        <a href="{% url 'catalogo' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> Catálogo
+                        </a>
+                        <form method="get" class="d-flex">
+                            <input type="hidden" name="action" value="list">
+                            <input type="text" class="form-control search-input" 
+                                   name="search"
+                                   placeholder="Buscar proveedor..." 
+                                   value="{{ search_query }}">
+                            <button type="submit" class="btn btn-outline-primary ms-2">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
+            
             <div class="card-body">
+                <!-- Mostrar mensajes -->
+                {% if messages %}
+                <div class="mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Modal de confirmación para eliminar -->
+                {% if action == 'delete' and proveedor_eliminar %}
+                <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title text-danger">
+                                    <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                                </h5>
+                            </div>
+                            <div class="modal-body text-center">
+                                <p>¿Estás seguro de que deseas eliminar este proveedor?</p>
+                                <p class="lead"><strong>{{ proveedor_eliminar.empresa }}</strong></p>
+                                
+                                {% if tiene_compras %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-ban"></i>
+                                    <strong>¡ADVERTENCIA!</strong><br>
+                                    Este proveedor tiene compras asociadas en el sistema.<br>
+                                    <small>Primero debe eliminar o modificar las compras relacionadas.</small>
+                                </div>
+                                {% endif %}
+                                
+                                {% if proveedor_eliminar.telefono %}
+                                <p>Teléfono: {{ proveedor_eliminar.telefono }}</p>
+                                {% endif %}
+                                <p class="text-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    Esta acción no se puede deshacer.
+                                </p>
+                            </div>
+                            <div class="modal-footer">
+                                <form method="post" action="?action=delete&pk={{ proveedor_eliminar.pk }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="proveedor_id" value="{{ proveedor_eliminar.pk }}">
+                                    <input type="hidden" name="delete" value="true">
+                                    <button type="submit" class="btn btn-danger" {% if tiene_compras %}disabled{% endif %}>
+                                        <i class="fas fa-trash"></i> 
+                                        {% if tiene_compras %}No se puede eliminar{% else %}Sí, eliminar{% endif %}
+                                    </button>
+                                </form>
+                                <a href="?action=list{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Lista de proveedores -->
+                {% if proveedores and proveedores|length > 0 %}
                 <div class="table-responsive">
-                    <table class="table table-hover" id="tablaProveedores">
+                    <table class="table table-standard">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -52,49 +174,187 @@
                                 <th>Teléfono</th>
                                 <th>Productos</th>
                                 <th>Fecha Registro</th>
-                                <th>Acciones</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for proveedor in proveedores %}
                             <tr>
-                                <td>{{ proveedor.id_proveedor }}</td>
-                                <td>{{ proveedor.empresa }}</td>
-                                <td>{{ proveedor.telefono|default:"-" }}</td>
-                                <td>{{ proveedor.productos|default:"-"|truncatechars:50 }}</td>
-                                <td>{{ proveedor.fecha_creacion|date:"d/m/Y" }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <span class="badge badge-standard bg-secondary">
+                                        #{{ proveedor.id_proveedor }}
+                                    </span>
                                 </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center">No hay proveedores registrados</td>
+                                <td>
+                                    <strong>{{ proveedor.empresa }}</strong>
+                                </td>
+                                <td>
+                                    {% if proveedor.telefono %}
+                                    <a href="tel:{{ proveedor.telefono }}" class="text-decoration-none">
+                                        <i class="fas fa-phone me-1"></i>{{ proveedor.telefono }}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ proveedor.productos|default:"-"|truncatechars:30 }}</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ proveedor.fecha_creacion|date:"d/m/Y" }}
+                                    </small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="?action=edit&pk={{ proveedor.pk }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                                           class="btn btn-outline-primary btn-action"
+                                           data-bs-toggle="tooltip" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="?action=delete&pk={{ proveedor.pk }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                                           class="btn btn-outline-danger btn-action"
+                                           data-bs-toggle="tooltip" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Paginación -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="d-flex align-items-center">
+                        <form method="get" class="d-flex align-items-center mb-0">
+                            <input type="hidden" name="action" value="list">
+                            {% if search_query %}
+                                <input type="hidden" name="search" value="{{ search_query }}">
+                            {% endif %}
+                            <label class="me-2 mb-0">Mostrar:</label>
+                            <select name="filas" class="form-select form-select-sm w-auto me-2" onchange="this.form.submit()">
+                                {% for opcion in opciones_filas %}
+                                    <option value="{{ opcion }}" {% if filas_por_pagina == opcion %}selected{% endif %}>{{ opcion }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="me-3">registros</span>
+                        </form>
+                    </div>
+
+                    <nav aria-label="Paginación">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if proveedores.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?action=list&page={{ proveedores.previous_page_number }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    &laquo; Anterior
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo; Anterior</span></li>
+                            {% endif %}
+
+                            {% for i in proveedores.paginator.page_range %}
+                                {% if proveedores.number == i %}
+                                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                {% elif i >= proveedores.number|add:-2 and i <= proveedores.number|add:2 %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?action=list&page={{ i }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if proveedores.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?action=list&page={{ proveedores.next_page_number }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    Siguiente &raquo;
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">Siguiente &raquo;</span></li>
+                            {% endif %}
+                        </ul>
+                        <p class="text-center text-muted mt-2 mb-0">
+                            Página {{ proveedores.number }} de {{ proveedores.paginator.num_pages }}
+                        </p>
+                    </nav>
+                </div>
+
+                {% else %}
+                <!-- Estado vacío -->
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-3">
+                        <i class="fas fa-truck fa-3x text-muted"></i>
+                    </div>
+                    <h3 class="empty-state-title">No hay proveedores registrados</h3>
+                    <p class="empty-state-message text-muted mb-4">
+                        {% if search_query %}
+                            No se encontraron resultados para "{{ search_query }}"
+                        {% else %}
+                            Registra proveedores para gestionar tus compras.
+                        {% endif %}
+                    </p>
+                    <a href="?action=create" class="btn btn-primary-standard">
+                        <i class="fas fa-truck"></i> Crear Proveedor
+                    </a>
+                    {% if search_query %}
+                        <a href="?action=list" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i> Limpiar búsqueda
+                        </a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Búsqueda en tiempo real para proveedores
-document.getElementById('searchProveedores').addEventListener('keyup', function() {
-    const searchText = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#tablaProveedores tbody tr');
+$(document).ready(function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
     
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchText) ? '' : 'none';
+    // Cerrar modal de eliminación al hacer clic fuera
+    {% if action == 'delete' and proveedor_eliminar %}
+    $(document).on('click', function(e) {
+        if ($(e.target).hasClass('modal')) {
+            window.location.href = '?action=list{% if search_query %}&search={{ search_query }}{% endif %}';
+        }
+    });
+    {% endif %}
+    
+    // Validación de formularios
+    $('.needs-validation').on('submit', function(e) {
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        $(this).addClass('was-validated');
+    });
+    
+    // Limpiar formulario cuando se cancela
+    $('.btn-secondary-standard').on('click', function() {
+        $('.needs-validation').removeClass('was-validated');
+        $('.form-control').removeClass('is-invalid');
+    });
+    
+    // Auto-enfocar el primer campo cuando se está creando/ editando
+    {% if action == 'create' or action == 'edit' %}
+        setTimeout(function() {
+            $('input[name="empresa"]').focus();
+        }, 100);
+    {% endif %}
+    
+    // Prevenir envío doble del formulario
+    $('form').on('submit', function() {
+        var submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
     });
 });
 </script>
-
+{% endblock %}

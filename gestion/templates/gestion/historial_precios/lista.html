@@ -1,61 +1,53 @@
 {% extends 'base.html' %}
 
+{% block module_name %}historial_precios{% endblock %}
 {% block title %}Historial de Precios{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-chart-line"></i> Historial de Precios</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'historial_precio_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nuevo Precio
-        </a>
+<!-- Header de página -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-chart-line"></i> Historial de Precios</h1>
     </div>
 </div>
 
-<!-- Filtros -->
-<div class="card mb-4">
+<!-- Buscador -->
+<div class="card card-form mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-10">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" name="search" 
-                           placeholder="Buscar por producto..." 
-                           value="{{ search_query }}">
-                </div>
+                <input type="text" class="form-control search-input" 
+                       name="search" 
+                       placeholder="Buscar por producto..." 
+                       value="{{ search_query }}">
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                <button type="submit" class="btn btn-primary-standard w-100">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Gráfico de tendencias (placeholder) -->
-<div class="card mb-4">
+<!-- Tabla de historial -->
+<div class="card card-list">
     <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Tendencia de Precios</h5>
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Registros de Precios
+            <span class="badge badge-standard bg-primary ms-2">{{ historial.paginator.count }}</span>
+        </h5>
     </div>
-    <div class="card-body text-center py-5">
-        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-        <p class="text-muted">Gráfico de tendencias de precios</p>
-        <small>Se mostraría aquí un gráfico con la evolución de precios</small>
-    </div>
-</div>
-
-<!-- Tabla de Historial -->
-<div class="card">
     <div class="card-body">
+        {% if historial %}
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-standard">
                 <thead>
                     <tr>
                         <th>Producto</th>
                         <th>Precio Sugerido</th>
-                        <th>Fecha</th>
-                        <th>Variación</th>
+                        <th>Fecha Registro</th>
                         <th>Última Actualización</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -64,48 +56,139 @@
                         <td>
                             <strong>{{ item.id_producto.nombre }}</strong>
                             {% if item.id_producto.marca %}
-                            <br><small class="text-muted">{{ item.id_producto.marca }}</small>
+                                <br><small class="text-muted">{{ item.id_producto.marca }}</small>
                             {% endif %}
                         </td>
                         <td class="fw-bold text-primary">
                             ${{ item.precio_sugerido|floatformat:2 }}
                         </td>
-                        <td>{{ item.fecha|date:"d/m/Y H:i" }}</td>
                         <td>
-                            {% if item.variacion %}
-                                {% if item.variacion > 0 %}
-                                <span class="badge bg-danger">+{{ item.variacion|floatformat:2 }}%</span>
-                                {% else %}
-                                <span class="badge bg-success">{{ item.variacion|floatformat:2 }}%</span>
-                                {% endif %}
+                            <small>{{ item.fecha|date:"d/m/Y H:i" }}</small>
+                        </td>
+                        <td>
+                            {% if item.fecha_actualizacion %}
+                                <small class="text-muted">{{ item.fecha_actualizacion|timesince }} atrás</small>
                             {% else %}
-                            <span class="text-muted">-</span>
+                                <span class="badge badge-standard bg-secondary">No actualizado</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <small>{{ item.fecha_actualizacion|timesince }} atrás</small>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Ver gráfico">
-                                <i class="fas fa-chart-line"></i>
+                        <td class="text-center">
+                            <button class="btn btn-outline-info btn-action" data-bs-toggle="tooltip" title="Ver detalles">
+                                <i class="fas fa-eye"></i>
                             </button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <i class="fas fa-history fa-2x text-muted mb-3"></i>
-                            <p>No hay historial de precios</p>
-                            <a href="{% url 'historial_precio_create' %}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Agregar Primer Precio
-                            </a>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <!-- Contenedor de Paginación y Mostrar registros -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <!-- Selector de filas por página -->
+            <div class="d-flex align-items-center">
+                <form method="get" class="d-flex align-items-center mb-0">
+                    <label class="me-2 mb-0">Mostrar:</label>
+                    <select name="filas" class="form-select form-select-sm w-auto me-2" onchange="this.form.submit()">
+                        {% for opcion in opciones_filas %}
+                            <option value="{{ opcion }}" {% if filas_por_pagina == opcion %}selected{% endif %}>{{ opcion }}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="me-3">registros</span>
+                    {% if search_query %}
+                        <input type="hidden" name="search" value="{{ search_query }}">
+                    {% endif %}
+                    {% if historial.number %}
+                        <input type="hidden" name="page" value="{{ historial.number }}">
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Paginación -->
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center mb-0">
+                    <!-- Botón Anterior -->
+                    {% if historial.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ historial.previous_page_number }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            &laquo; Anterior
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Anterior</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Números de páginas -->
+                    {% for i in historial.paginator.page_range %}
+                        {% if historial.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% elif i >= historial.number|add:-2 and i <= historial.number|add:2 %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ i }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Botón Siguiente -->
+                    {% if historial.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ historial.next_page_number }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            Siguiente &raquo;
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Siguiente &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                <p class="text-center text-muted mt-2 mb-0">
+                    Página {{ historial.number }} de {{ historial.paginator.num_pages }}
+                </p>
+            </nav>
+        </div>
+
+        {% else %}
+        <div class="empty-state text-center py-4">
+            <div class="empty-state-icon mb-3">
+                <i class="fas fa-history fa-2x text-muted"></i>
+            </div>
+            <h3 class="empty-state-title">No hay historial de precios</h3>
+            <p class="empty-state-message">
+                {% if search_query %}
+                    No se encontraron resultados para "{{ search_query }}"
+                {% else %}
+                    Registra compras para generar historial de precios.
+                {% endif %}
+            </p>
+            {% if search_query %}
+                <a href="?" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Limpiar búsqueda
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Inicializar tooltips de Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

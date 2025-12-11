@@ -1,39 +1,59 @@
-<!-- gestion/templates/gestion/includes/header.html -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<!-- Header -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm header-fixed">
     <div class="container-fluid">
+        <!-- Logo/Brand -->
         <a class="navbar-brand" href="{% url 'dashboard' %}">
-            <i class="fas fa-warehouse"></i> Sistema de Inventario
+            <i class="fas fa-warehouse me-2"></i>
+            <span class="fw-bold">Sistema de Inventario</span>
         </a>
         
+        <!-- Mobile Toggle -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         
+        <!-- Navegación -->
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
+                <!-- Usuario -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user"></i> {{ user.username }}
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" 
+                       href="#" 
+                       id="navbarDropdown" 
+                       role="button" 
+                       data-bs-toggle="dropdown" 
+                       aria-expanded="false">
+                        <i class="fas fa-user-circle me-2"></i>
+                        <span>{{ user.username }}</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Configuración</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="navbarDropdown">
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-user me-2"></i>Mi Perfil
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-cog me-2"></i>Configuración
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
-                                <button type="submit" class="dropdown-item">
-                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                                 </button>
                             </form>
                         </li>
                     </ul>
                 </li>
                 {% else %}
+                <!-- Login -->
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'login' %}">
-                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                        <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
                     </a>
                 </li>
                 {% endif %}

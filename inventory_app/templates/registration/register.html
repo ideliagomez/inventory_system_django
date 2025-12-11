@@ -4,66 +4,160 @@
 {% block title %}Registro de Usuario{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center align-items-center min-vh-80">
     <div class="col-md-8 col-lg-6">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Registro de Usuario</h4>
+        <div class="card card-form shadow-lg">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Registro de Usuario
+                </h4>
             </div>
+            
             <div class="card-body">
-                <form method="post">
+                <form method="post" class="needs-validation" novalidate>
                     {% csrf_token %}
                     
+                    <!-- Información -->
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Completa todos los campos para crear tu cuenta de administrador.
+                    </div>
+                    
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="id_username" class="form-label">Nombre de usuario</label>
-                            {{ form.username|add_class:"form-control" }}
-                            {% if form.username.errors %}
-                                <div class="text-danger">{{ form.username.errors }}</div>
-                            {% endif %}
+                        <!-- Username -->
+                        <div class="col-md-6">
+                            <div class="form-group-standard mb-3">
+                                <label for="id_username" class="form-label">
+                                    <i class="fas fa-user me-1"></i>
+                                    Nombre de usuario
+                                </label>
+                                {{ form.username|add_class:"form-control"|attr:"required" }}
+                                {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.username.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Nombre para iniciar sesión
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="col-md-6 mb-3">
-                            <label for="id_email" class="form-label">Correo electrónico</label>
-                            {{ form.email|add_class:"form-control" }}
-                            {% if form.email.errors %}
-                                <div class="text-danger">{{ form.email.errors }}</div>
-                            {% endif %}
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <div class="form-group-standard mb-3">
+                                <label for="id_email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>
+                                    Correo electrónico
+                                </label>
+                                {{ form.email|add_class:"form-control"|attr:"type:email"|attr:"required" }}
+                                {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="id_password1" class="form-label">Contraseña</label>
-                            {{ form.password1|add_class:"form-control" }}
-                            <small class="form-text text-muted">
-                                Mínimo 8 caracteres. No puede ser similar a su información personal.
+                        <!-- Password 1 -->
+                        <div class="col-md-6">
+                            <div class="form-group-standard mb-3">
+                                <label for="id_password1" class="form-label">
+                                    <i class="fas fa-key me-1"></i>
+                                    Contraseña
+                                </label>
+                                {{ form.password1|add_class:"form-control"|attr:"required" }}
+                                {% if form.password1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password1.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <small>
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Mínimo 8 caracteres.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Password 2 -->
+                        <div class="col-md-6">
+                            <div class="form-group-standard mb-3">
+                                <label for="id_password2" class="form-label">
+                                    <i class="fas fa-key me-1"></i>
+                                    Confirmar contraseña
+                                </label>
+                                {{ form.password2|add_class:"form-control"|attr:"required" }}
+                                {% if form.password2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password2.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <small>
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Debe coincidir con la contraseña.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Términos y condiciones -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                        <label class="form-check-label" for="termsCheck">
+                            <small>
+                                Acepto los 
+                                <a href="#" class="text-decoration-none">términos y condiciones</a>
+                                del servicio.
                             </small>
-                            {% if form.password1.errors %}
-                                <div class="text-danger">{{ form.password1.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="id_password2" class="form-label">Confirmar contraseña</label>
-                            {{ form.password2|add_class:"form-control" }}
-                            {% if form.password2.errors %}
-                                <div class="text-danger">{{ form.password2.errors }}</div>
-                            {% endif %}
+                        </label>
+                        <div class="invalid-feedback">
+                            Debes aceptar los términos y condiciones.
                         </div>
                     </div>
                     
+                    <!-- Botones -->
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Registrar
+                        <button type="submit" class="btn btn-success-standard">
+                            <i class="fas fa-check me-1"></i>
+                            Crear Cuenta
                         </button>
+                        
                         <a href="{% url 'login' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left"></i> Volver al login
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Volver al login
                         </a>
                     </div>
                 </form>
             </div>
+            
+            <div class="card-footer text-center bg-light">
+                <small class="text-muted">
+                    ¿Ya tienes una cuenta? 
+                    <a href="{% url 'login' %}" class="text-decoration-none">Inicia sesión aquí</a>
+                </small>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.min-vh-80 {
+    min-height: 80vh;
+}
+
+.btn-success-standard {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+}
+</style>
 {% endblock %}

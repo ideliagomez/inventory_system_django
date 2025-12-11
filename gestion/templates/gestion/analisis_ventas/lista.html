@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block module_name %}analisis_ventas{% endblock %}
+{% block title %}Análisis de Ventas{% endblock %}
+
+{% block content %}
+<!-- Header de página -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-chart-line"></i> Análisis de Ventas</h1>
+        <div class="btn-group">
+            <a href="{% url 'analisis_ventas_recalcular_todo' %}" 
+               class="btn btn-warning"
+               onclick="return confirm('¿Recalcular todo el histórico? Esto puede tomar unos momentos.')">
+                <i class="fas fa-sync-alt"></i> Recalcular Todo
+            </a>
+            <a href="{% url 'venta_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Ver Ventas
+            </a>
+        </div>
+    </div>
+    <p class="text-muted mb-0">Análisis diario de ventas con cálculo de ganancias y ahorro</p>
+</div>
+
+<!-- Filtros -->
+<div class="card card-form mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Fecha inicio</label>
+                {{ form.fecha_inicio|add_class:"form-control" }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha fin</label>
+                {{ form.fecha_fin|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Buscar por fecha</label>
+                <div class="search-container">
+                    {{ form.search|add_class:"form-control search-input" }}
+                </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="d-grid w-100">
+                    <button type="submit" class="btn btn-primary-standard">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen General -->
+{% if total_general.total_ventas %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">TOTAL VENTAS</h6>
+                <h3 class="text-success mb-0">C${{ total_general.total_ventas|default:0|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">GANANCIA PROMEDIO (20%)</h6>
+                <h3 class="text-warning mb-0">C${{ total_general.total_ganancia|default:0|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">AHORRO (30% de ganancia)</h6>
+                <h3 class="text-info mb-0">C${{ total_general.total_ahorro|default:0|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabla de Análisis -->
+<div class="card card-list">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-chart-bar me-1"></i>
+            Análisis Diario de Ventas
+            <span class="badge badge-standard bg-primary ms-2">{{ analisis_list.paginator.count }}</span>
+        </h5>
+    </div>
+    
+    <div class="card-body">
+        <!-- Mostrar mensajes -->
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if analisis_list %}
+        <div class="table-responsive">
+            <table class="table table-standard" id="tablaAnalisis">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th class="text-end">Total Ventas</th>
+                        <th class="text-end">Ganancia Promedio</th>
+                        <th class="text-end">Ahorro</th>
+                        <th class="text-center">Porcentajes</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for analisis in analisis_list %}
+                    <tr>
+                        <td>
+                            <strong>{{ analisis.fecha|date:"d/m/Y" }}</strong>
+                            <br>
+                            <small class="text-muted">{{ analisis.fecha|date:"l" }}</small>
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-bold text-success">C${{ analisis.total_ventas|floatformat:2 }}</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-bold text-warning">C${{ analisis.promedio_ganancia|floatformat:2 }}</span>
+                            <br>
+                            <small class="text-muted">(20% del total)</small>
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-bold text-info">C${{ analisis.ahorro|floatformat:2 }}</span>
+                            <br>
+                            <small class="text-muted">(30% de ganancia)</small>
+                        </td>
+                        <td class="text-center">
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-warning" style="width: 20%;" 
+                                     data-bs-toggle="tooltip" title="Ganancia 20%"></div>
+                                <div class="progress-bar bg-info" style="width: 6%;" 
+                                     data-bs-toggle="tooltip" title="Ahorro 6% del total"></div>
+                            </div>
+                            <small class="text-muted">20% → 6% del total</small>
+                        </td>
+                        <td class="text-center">
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="fecha" value="{{ analisis.fecha|date:'Y-m-d' }}">
+                                <button type="submit" 
+                                        name="recalcular" 
+                                        class="btn btn-sm btn-outline-warning"
+                                        onclick="return confirm('¿Recalcular análisis para {{ analisis.fecha|date:"d/m/Y" }}?')">
+                                    <i class="fas fa-sync-alt"></i> Recalcular
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Contenedor de Paginación -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <!-- Selector de filas por página -->
+            <div class="d-flex align-items-center">
+                <form method="get" class="d-flex align-items-center mb-0">
+                    <label class="me-2 mb-0">Mostrar:</label>
+                    <select name="filas" class="form-select form-select-sm w-auto me-2" onchange="this.form.submit()">
+                        {% for opcion in opciones_filas %}
+                            <option value="{{ opcion }}" {% if filas_por_pagina == opcion %}selected{% endif %}>{{ opcion }}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="me-3">registros</span>
+                    
+                    <!-- Mantener parámetros de filtro en el formulario -->
+                    {% if fecha_inicio %}
+                        <input type="hidden" name="fecha_inicio" value="{{ fecha_inicio }}">
+                    {% endif %}
+                    {% if fecha_fin %}
+                        <input type="hidden" name="fecha_fin" value="{{ fecha_fin }}">
+                    {% endif %}
+                    {% if search_query %}
+                        <input type="hidden" name="search" value="{{ search_query }}">
+                    {% endif %}
+                    {% if analisis_list.number %}
+                        <input type="hidden" name="page" value="{{ analisis_list.number }}">
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Paginación -->
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center mb-0">
+                    <!-- Botón Anterior -->
+                    {% if analisis_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ analisis_list.previous_page_number }}&filas={{ filas_por_pagina }}{% if fecha_inicio %}&fecha_inicio={{ fecha_inicio }}{% endif %}{% if fecha_fin %}&fecha_fin={{ fecha_fin }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            &laquo; Anterior
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Anterior</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Números de páginas -->
+                    {% for i in analisis_list.paginator.page_range %}
+                        {% if analisis_list.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% elif i >= analisis_list.number|add:-2 and i <= analisis_list.number|add:2 %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ i }}&filas={{ filas_por_pagina }}{% if fecha_inicio %}&fecha_inicio={{ fecha_inicio }}{% endif %}{% if fecha_fin %}&fecha_fin={{ fecha_fin }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Botón Siguiente -->
+                    {% if analisis_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ analisis_list.next_page_number }}&filas={{ filas_por_pagina }}{% if fecha_inicio %}&fecha_inicio={{ fecha_inicio }}{% endif %}{% if fecha_fin %}&fecha_fin={{ fecha_fin }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            Siguiente &raquo;
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Siguiente &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                <p class="text-center text-muted mt-2 mb-0">
+                    Página {{ analisis_list.number }} de {{ analisis_list.paginator.num_pages }}
+                </p>
+            </nav>
+        </div>
+
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <div class="empty-state-icon mb-3">
+                <i class="fas fa-chart-line fa-3x text-muted"></i>
+            </div>
+            <h3 class="empty-state-title">No hay análisis registrados</h3>
+            <p class="empty-state-message text-muted mb-4">
+                {% if fecha_inicio or fecha_fin or search_query %}
+                    No se encontraron resultados para los filtros aplicados
+                {% else %}
+                    No hay datos de análisis disponibles. Recalcula el histórico.
+                {% endif %}
+            </p>
+            <a href="{% url 'analisis_ventas_recalcular_todo' %}" 
+               class="btn btn-warning"
+               onclick="return confirm('¿Recalcular todo el histórico?')">
+                <i class="fas fa-sync-alt"></i> Recalcular Histórico
+            </a>
+            {% if fecha_inicio or fecha_fin or search_query %}
+                <a href="?" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-times"></i> Limpiar filtros
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Leyenda -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h6><i class="fas fa-info-circle"></i> ¿Cómo se calculan estas métricas?</h6>
+        <ul class="mb-0">
+            <li><strong>Total Ventas:</strong> Suma de todas las ventas del día</li>
+            <li><strong>Ganancia Promedio (20%):</strong> Se asume un margen de ganancia del 20% sobre el total de ventas</li>
+            <li><strong>Ahorro (30% de ganancia):</strong> Se recomienda ahorrar el 30% de la ganancia promedio</li>
+            <li><strong>En porcentajes:</strong> El ahorro representa el 6% del total de ventas (30% del 20%)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Establecer fecha máxima para los inputs de fecha
+    const today = new Date().toISOString().split('T')[0];
+    $('input[type="date"]').attr('max', today);
+});
+</script>
+{% endblock %}

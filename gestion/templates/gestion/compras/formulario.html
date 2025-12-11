@@ -1,87 +1,156 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
+{% block module_name %}compras{% endblock %}
 {% block title %}{% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Compra{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-shopping-cart"></i> 
-        {% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Compra
-    </h1>
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>
+            <i class="fas fa-shopping-cart"></i>
+            {% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Compra
+        </h1>
+        <a href="{% url 'compra_list' %}" class="btn btn-secondary-standard">
+            <i class="fas fa-arrow-left"></i> Volver a Compras
+        </a>
+    </div>
 </div>
 
-<div class="card">
+<div class="card card-form">
     <div class="card-body">
-        <form method="post">
+        <form method="post" class="needs-validation" novalidate>
             {% csrf_token %}
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Número de Factura</label>
-                    {{ form.numero_factura|add_class:"form-control" }}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label>Número de Factura</label>
+                    {{ form.numero_factura|add_class:"form-control"|attr:"required" }}
+                    <div class="invalid-feedback">Ingresa el número de factura.</div>
                 </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Fecha</label>
-                    {{ form.fecha|add_class:"form-control" }}
+
+                <div class="col-md-6">
+                    <label>Fecha</label>
+                    {{ form.fecha|add_class:"form-control"|attr:"type:date"|attr:"required" }}
+                    <div class="invalid-feedback">Selecciona una fecha.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Proveedor</label>
+                    {{ form.id_proveedor|add_class:"form-select"|attr:"required" }}
+                    <div class="invalid-feedback">Selecciona un proveedor.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Producto</label>
+                    {{ form.id_producto|add_class:"form-select"|attr:"required" }}
+                    <div class="invalid-feedback">Selecciona un producto.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Cantidad</label>
+                    {{ form.cantidad|add_class:"form-control"|attr:"type:number"|attr:"min:1"|attr:"required" }}
+                    <div class="invalid-feedback">La cantidad debe ser mayor a 0.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Costo Total</label>
+                    <div class="input-group">
+                        <span class="input-group-text">C$</span>
+                        {{ form.costo_total|add_class:"form-control"|attr:"step:0.01"|attr:"required" }}
+                    </div>
+                    <div class="invalid-feedback">Ingresa el costo total.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label>% de Ganancia</label>
+                    {{ form.porcentaje_ganancia|add_class:"form-control"|attr:"type:number"|attr:"step:0.01" }}
+                </div>
+
+                <div class="col-md-3">
+                    <label>Costo Unitario</label>
+                    <div class="input-group">
+                        <span class="input-group-text">C$</span>
+                        {{ form.costo_unitario|add_class:"form-control" }}
+                    </div>
+                    <small class="text-muted">Calculado automáticamente</small>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Precio de Venta</label>
+                    <div class="input-group">
+                        <span class="input-group-text">C$</span>
+                        {{ form.precio|add_class:"form-control" }}
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Ganancia Unitaria</label>
+                    <div class="input-group">
+                        <span class="input-group-text">C$</span>
+                        {{ form.ganancia_unitaria|add_class:"form-control" }}
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Ganancia Total</label>
+                    <div class="input-group">
+                        <span class="input-group-text">C$</span>
+                        {{ form.ganancia_total|add_class:"form-control" }}
+                    </div>
                 </div>
             </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Proveedor</label>
-                    {{ form.id_proveedor|add_class:"form-control" }}
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Producto</label>
-                    {{ form.id_producto|add_class:"form-control" }}
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Costo Total</label>
-                    {{ form.costo_total|add_class:"form-control" }}
-                </div>
-                
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Cantidad</label>
-                    {{ form.cantidad|add_class:"form-control" }}
-                </div>
-                
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Porcentaje de Ganancia (%)</label>
-                    {{ form.porcentaje_ganancia|add_class:"form-control" }}
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Costo Unitario</label>
-                    {{ form.costo_unitario|add_class:"form-control" }}
-                </div>
-                
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Precio de Venta</label>
-                    {{ form.precio|add_class:"form-control" }}
-                </div>
-                
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Ganancia Total</label>
-                    {{ form.ganancia_total|add_class:"form-control" }}
-                </div>
-            </div>
-            
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Guardar
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary-standard">
+                    <i class="fas fa-save"></i> {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %} Compra
                 </button>
-                <a href="{% url 'compra_list' %}" class="btn btn-secondary">
+                <a href="{% url 'compra_list' %}" class="btn btn-secondary-standard">
                     <i class="fas fa-times"></i> Cancelar
                 </a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cantidad = document.getElementById("id_cantidad");
+    const costoTotal = document.getElementById("id_costo_total");
+    const porcentajeGanancia = document.getElementById("id_porcentaje_ganancia");
+    const costoUnitario = document.getElementById("id_costo_unitario");
+    const gananciaUnitaria = document.getElementById("id_ganancia_unitaria");
+    const gananciaTotal = document.getElementById("id_ganancia_total");
+    const precio = document.getElementById("id_precio");
+
+    function calcular() {
+        let cant = parseFloat(cantidad.value) || 0;
+        let costo = parseFloat(costoTotal.value) || 0;
+        let porcentaje = parseFloat(porcentajeGanancia.value) || 0;
+
+        let unitario = cant > 0 ? costo / cant : 0;
+        let ganUnit = unitario * (porcentaje / 100);
+        let ganTotal = ganUnit * cant;
+        let prec = unitario + ganUnit;
+
+        costoUnitario.value = unitario.toFixed(2);
+        gananciaUnitaria.value = ganUnit.toFixed(2);
+        gananciaTotal.value = ganTotal.toFixed(2);
+        precio.value = prec.toFixed(2);
+    }
+
+    cantidad.addEventListener('input', calcular);
+    costoTotal.addEventListener('input', calcular);
+    porcentajeGanancia.addEventListener('input', calcular);
+});
+</script>
 {% endblock %}

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import *
+from django.utils import timezone
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True, label="Correo electrónico")
@@ -16,6 +17,17 @@ class CustomUserCreationForm(UserCreationForm):
         }
 
 class CompraForm(forms.ModelForm):
+    # Campos calculados
+    costo_unitario = forms.DecimalField(required=False, widget=forms.NumberInput(attrs={
+        'class':'form-control', 'step':'0.01', 'readonly':'readonly'
+    }))
+    ganancia_unitaria = forms.DecimalField(required=False, widget=forms.NumberInput(attrs={
+        'class':'form-control', 'step':'0.01', 'readonly':'readonly'
+    }))
+    ganancia_total = forms.DecimalField(required=False, widget=forms.NumberInput(attrs={
+        'class':'form-control', 'step':'0.01', 'readonly':'readonly'
+    }))
+
     class Meta:
         model = Compra
         fields = '__all__'
@@ -25,12 +37,9 @@ class CompraForm(forms.ModelForm):
             'id_proveedor': forms.Select(attrs={'class': 'form-control'}),
             'id_producto': forms.Select(attrs={'class': 'form-control'}),
             'costo_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'costo_unitario': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'min':'1'}),
             'porcentaje_ganancia': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'precio': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly'}),
-            'ganancia_unitaria': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly'}),
-            'ganancia_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly'}),
+            'precio': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
         labels = {
             'numero_factura': 'Número de Factura',
@@ -45,6 +54,7 @@ class CompraForm(forms.ModelForm):
             'ganancia_unitaria': 'Ganancia Unitaria',
             'ganancia_total': 'Ganancia Total',
         }
+
 
 class VentaForm(forms.ModelForm):
     class Meta:
@@ -105,3 +115,34 @@ class HistorialPrecioForm(forms.ModelForm):
             'fecha': 'Fecha',
             'precio_sugerido': 'Precio Sugerido',
         }
+
+#--------- Análisis de Ventas ------------
+class AnalisisVentaFilterForm(forms.Form):
+    fecha_inicio = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label='Fecha inicio'
+    )
+    fecha_fin = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label='Fecha fin'
+    )
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Buscar por fecha...'
+        })
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Establecer valores por defecto (últimos 30 días)
+        hoy = timezone.now().date()
+        mes_pasado = hoy - timezone.timedelta(days=30)
+        
+        if not self.initial.get('fecha_inicio'):
+            self.initial['fecha_inicio'] = mes_pasado
+        if not self.initial.get('fecha_fin'):
+            self.initial['fecha_fin'] = hoy

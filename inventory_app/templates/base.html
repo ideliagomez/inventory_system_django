@@ -1,205 +1,70 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Inventario{% endblock %}</title>
+    
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* PREVENIR OVERLAY */
-        body.modal-open {
-            overflow: auto !important;
-            padding-right: 0 !important;
-        }
-        .modal-backdrop {
-            display: none !important;
-        }
-        
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background-color: #f8f9fa;
-            border-right: 1px solid #dee2e6;
-        }
-        .sidebar .nav-link {
-            color: #495057;
-        }
-        .sidebar .nav-link:hover {
-            background-color: #e9ecef;
-        }
-        .sidebar .nav-link.active {
-            background-color: #007bff;
-            color: white;
-        }
-        .card-stat {
-            border-radius: 10px;
-            transition: transform 0.3s;
-        }
-        .card-stat:hover {
-            transform: translateY(-5px);
-        }
-        .modal-lg {
-            max-width: 800px;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-        
-        /* ASEGURAR QUE LOS ELEMENTOS SEAN CLICKEABLES */
-        * {
-            pointer-events: auto !important;
-        }
-        body {
-            pointer-events: auto !important;
-            position: relative !important;
-        }
-    </style>
+
+    <!-- Estilos base -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    {% include 'gestion/includes/header.html' %}
+
+<body class="module-{% block module_name %}base{% endblock %}">
     
+    {% include 'gestion/includes/header.html' %}
+
     <div class="container-fluid">
         <div class="row">
+
             {% if user.is_authenticated %}
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
                 {% include 'gestion/includes/sidebar.html' %}
             </nav>
             {% endif %}
-            
+
             <main class="{% if user.is_authenticated %}col-md-9 ms-sm-auto col-lg-10{% else %}col-12{% endif %} px-md-4 py-4">
+                
                 {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <div class="d-flex align-items-center">
+                                <i class="fas 
+                                    {% if message.tags == 'success' %}fa-check-circle
+                                    {% elif message.tags == 'danger' %}fa-exclamation-circle
+                                    {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                                    {% else %}fa-info-circle{% endif %}
+                                me-2"></i>
+                                <div>{{ message }}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
                         </div>
                     {% endfor %}
                 {% endif %}
-                
+
                 {% block content %}{% endblock %}
             </main>
+
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle with Popper -->
+    <!-- JS: Bootstrap + Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
+    <!-- JS Base -->
+    <script src="{% static 'js/script.js' %}"></script>
+
     {% block extra_js %}{% endblock %}
-    
-    <script>
-        $(document).ready(function() {
-            // 1. ELIMINAR OVERLAY INMEDIATAMENTE
-            function removeOverlay() {
-                // Elimina cualquier modal backdrop
-                $('.modal-backdrop').remove();
-                
-                // Remueve clases que bloquean el body
-                $('body').removeClass('modal-open');
-                
-                // Restaura estilos del body
-                $('body').css({
-                    'overflow': 'auto',
-                    'padding-right': '0',
-                    'position': 'relative'
-                });
-                
-                // Cierra cualquier modal abierto
-                $('.modal').modal('hide');
-                $('.modal').removeClass('show');
-                $('.modal').css('display', 'none');
-                
-                // Elimina cualquier overlay personalizado
-                $('div').filter(function() {
-                    var $this = $(this);
-                    return $this.css('position') === 'fixed' && 
-                           ($this.css('top') === '0px' || $this.css('inset') === '0px') &&
-                           $this.css('z-index') >= 1000;
-                }).remove();
-                
-                console.log('✅ Overlay eliminado');
-            }
-            
-            // Ejecutar inmediatamente
-            removeOverlay();
-            
-            // 2. Activar tooltips
-            $('[data-bs-toggle="tooltip"]').tooltip();
-            
-            // 3. Confirmación para eliminar
-            $('.btn-eliminar').on('click', function() {
-                return confirm('¿Estás seguro de que quieres eliminar este registro?');
-            });
-            
-            // 4. Auto-cerrar alerts después de 5 segundos
-            setTimeout(function() {
-                $('.alert').alert('close');
-            }, 5000);
-            
-            // 5. Prevenir que se abran modales automáticamente
-            $(document).on('show.bs.modal', '.modal', function() {
-                // Solo permitir modales si son explícitamente abiertos
-                if (!$(this).data('bs.modal')._isShown) {
-                    $(this).modal('hide');
-                }
-            });
-            
-            // 6. Asegurar que los enlaces funcionen
-            $(document).on('click', 'a', function(e) {
-                // Si es un enlace interno, asegurar que funcione
-                var href = $(this).attr('href');
-                if (href && href.startsWith('/') && !href.startsWith('//')) {
-                    e.preventDefault();
-                    window.location.href = href;
-                }
-            });
-            
-            // 7. Verificar periódicamente que no haya overlay
-            setInterval(removeOverlay, 1000);
-        });
-        
-        // También ejecutar cuando se cargue completamente la página
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                $('.modal-backdrop').remove();
-                $('body').removeClass('modal-open');
-                $('body').css({
-                    'overflow': 'auto',
-                    'padding-right': '0'
-                });
-            }, 100);
-        });
-    </script>
-    
-    <!-- Script de emergencia inline -->
-    <script>
-        // Script de emergencia que se ejecuta incluso si hay errores
-        (function() {
-            try {
-                // Eliminar cualquier elemento que cubra la pantalla
-                var overlays = document.querySelectorAll('[class*="backdrop"], [class*="overlay"], .modal-backdrop');
-                overlays.forEach(function(el) {
-                    el.parentNode && el.parentNode.removeChild(el);
-                });
-                
-                // Restaurar body
-                document.body.classList.remove('modal-open');
-                document.body.style.cssText = 'overflow: auto !important; padding-right: 0 !important; position: relative !important;';
-                
-                // Hacer todos los elementos clickeables
-                var allElements = document.querySelectorAll('*');
-                allElements.forEach(function(el) {
-                    el.style.pointerEvents = 'auto';
-                });
-            } catch(e) {
-                console.log('Script de emergencia ejecutado');
-            }
-        })();
-    </script>
 </body>
 </html>

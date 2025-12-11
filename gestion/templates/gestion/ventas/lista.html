@@ -1,112 +1,120 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
+{% block module_name %}ventas{% endblock %}
 {% block title %}Lista de Ventas{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-cash-register"></i> Ventas</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'venta_create' %}" class="btn btn-success">
+<!-- Header de página -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-cash-register"></i> Ventas</h1>
+        <a href="{% url 'venta_create' %}" class="btn btn-primary-standard">
             <i class="fas fa-plus-circle"></i> Nueva Venta
         </a>
     </div>
 </div>
 
-<!-- Filtros y Búsqueda -->
-<div class="card mb-4 shadow-sm">
-    <div class="card-header bg-light">
-        <h5 class="mb-0"><i class="fas fa-filter"></i> Filtros y Búsqueda</h5>
-    </div>
+<!-- Buscador -->
+<div class="card card-form mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
-            <div class="col-md-8">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" name="search" 
+            <div class="col-md-10">
+                <div class="search-container">
+                    <input type="text" 
+                           class="form-control search-input" 
+                           name="search" 
                            placeholder="Buscar por producto, cliente..." 
-                           value="{{ search_query }}">
+                           value="{{ search_query }}"
+                           data-table="tablaVentas">
                 </div>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
+                <button type="submit" class="btn btn-primary-standard w-100">
                     <i class="fas fa-search"></i> Buscar
                 </button>
-            </div>
-            <div class="col-md-2">
-                <a href="{% url 'venta_list' %}" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-redo"></i> Limpiar
-                </a>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Estadísticas Rápidas -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white shadow">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title mb-1">Total Ventas</h6>
-                        <h4 class="mb-0">{{ ventas.count }}</h4>
-                    </div>
-                    <i class="fas fa-receipt fa-2x opacity-75"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white shadow">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title mb-1">Total Ingresos</h6>
-                        <h4 class="mb-0">${{ total_ingresos|default:"0.00" }}</h4>
-                    </div>
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white shadow">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title mb-1">Productos Vendidos</h6>
-                        <h4 class="mb-0">{{ total_productos|default:0 }}</h4>
-                    </div>
-                    <i class="fas fa-box fa-2x opacity-75"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white shadow">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title mb-1">Clientes Únicos</h6>
-                        <h4 class="mb-0">{{ total_clientes|default:0 }}</h4>
-                    </div>
-                    <i class="fas fa-users fa-2x opacity-75"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Tabla de Ventas -->
-<div class="card shadow">
-    <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="fas fa-list"></i> Lista de Ventas</h5>
+<div class="card card-list">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i>
+            Historial de Ventas
+            <span class="badge badge-standard bg-primary ms-2">{{ ventas.paginator.count }}</span>
+        </h5>
     </div>
+    
     <div class="card-body">
+        <!-- Mostrar mensajes -->
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Modal de confirmación para eliminar -->
+        {% if action == 'delete' and venta_eliminar %}
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                        </h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p>¿Estás seguro de que deseas eliminar esta venta?</p>
+                        <p class="lead"><strong>{{ venta_eliminar.id_producto.nombre }}</strong></p>
+                        
+                        <div class="alert alert-info text-start">
+                            <strong>Detalles de la venta:</strong><br>
+                            <small>
+                                Cliente: {% if venta_eliminar.id_cliente %}
+                                {{ venta_eliminar.id_cliente.nombre }} {{ venta_eliminar.id_cliente.apellido }}
+                                {% else %}Cliente no registrado{% endif %}<br>
+                                Cantidad: {{ venta_eliminar.cantidad }}<br>
+                                Precio Unitario: C${{ venta_eliminar.precio|floatformat:2 }}<br>
+                                Total: C${{ venta_eliminar.total|floatformat:2 }}<br>
+                                Fecha: {{ venta_eliminar.fecha_creacion|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                        
+                        <p class="text-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Esta acción no se puede deshacer.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <form method="post" action="?action=delete&pk={{ venta_eliminar.pk }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="venta_id" value="{{ venta_eliminar.pk }}">
+                            <input type="hidden" name="delete" value="true">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Sí, eliminar
+                            </button>
+                        </form>
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if ventas %}
         <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead class="table-dark">
+            <table class="table table-standard" id="tablaVentas">
+                <thead>
                     <tr>
                         <th>ID</th>
                         <th>Producto</th>
@@ -121,7 +129,7 @@
                 <tbody>
                     {% for venta in ventas %}
                     <tr>
-                        <td><span class="badge bg-secondary">#{{ venta.id_venta }}</span></td>
+                        <td><span class="badge badge-standard bg-secondary">#{{ venta.id_venta }}</span></td>
                         <td>
                             <strong>{{ venta.id_producto.nombre }}</strong>
                             {% if venta.id_producto.marca %}
@@ -135,109 +143,127 @@
                             <span class="text-muted">Cliente no registrado</span>
                             {% endif %}
                         </td>
-                        <td class="text-success">
-                            <strong>${{ venta.precio|floatformat:2 }}</strong>
-                        </td>
-                        <td>
-                            <span class="badge bg-primary rounded-pill">{{ venta.cantidad }}</span>
-                        </td>
-                        <td class="text-success">
-                            <strong>${{ venta.total|floatformat:2 }}</strong>
-                        </td>
-                        <td>
-                            <small>{{ venta.fecha_creacion|date:"d/m/Y H:i" }}</small>
-                        </td>
+                        <td class="text-success fw-bold">C${{ venta.precio|floatformat:2 }}</td>
+                        <td><span class="badge badge-standard bg-primary">{{ venta.cantidad }}</span></td>
+                        <td class="text-success fw-bold">C${{ venta.total|floatformat:2 }}</td>
+                        <td><small>{{ venta.fecha_creacion|date:"d/m/Y H:i" }}</small></td>
                         <td class="text-center">
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{% url 'venta_edit' venta.pk %}" class="btn btn-warning" 
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'venta_edit' venta.pk %}" 
+                                   class="btn btn-outline-primary btn-action"
                                    data-bs-toggle="tooltip" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'venta_delete' venta.pk %}" class="btn btn-danger"
+                                <a href="?action=delete&pk={{ venta.pk }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                                   class="btn btn-outline-danger btn-action"
                                    data-bs-toggle="tooltip" title="Eliminar">
                                     <i class="fas fa-trash"></i>
-                                </a>
-                                <button type="button" class="btn btn-info" 
-                                        data-bs-toggle="tooltip" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <div class="empty-state">
-                                <i class="fas fa-cash-register fa-3x text-muted mb-3"></i>
-                                <h5>No hay ventas registradas</h5>
-                                <p class="text-muted">Comienza registrando tu primera venta</p>
-                                <a href="{% url 'venta_create' %}" class="btn btn-success">
-                                    <i class="fas fa-plus-circle"></i> Crear Venta
                                 </a>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
-                {% if ventas %}
-                <tfoot class="table-light">
-                    <tr>
-                        <th colspan="5" class="text-end">Totales:</th>
-                        <th class="text-success">${{ total_general|floatformat:2 }}</th>
-                        <th colspan="2"></th>
-                    </tr>
-                </tfoot>
-                {% endif %}
             </table>
         </div>
-        
-        <!-- Paginación -->
-        {% if ventas.has_other_pages %}
-        <nav aria-label="Paginación" class="mt-4">
-            <ul class="pagination justify-content-center">
-                {% if ventas.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ ventas.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
-                {% endif %}
-                
-                {% for i in ventas.paginator.page_range %}
-                    {% if ventas.number == i %}
-                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                    {% else %}
+
+        <!-- Contenedor de Paginación y Mostrar registros -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <!-- Selector de filas por página -->
+            <div class="d-flex align-items-center">
+                <form method="get" class="d-flex align-items-center mb-0">
+                    <label class="me-2 mb-0">Mostrar:</label>
+                    <select name="filas" class="form-select form-select-sm w-auto me-2" onchange="this.form.submit()">
+                        {% for opcion in opciones_filas %}
+                            <option value="{{ opcion }}" {% if filas_por_pagina == opcion %}selected{% endif %}>{{ opcion }}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="me-3">registros</span>
+                    {% if search_query %}
+                        <input type="hidden" name="search" value="{{ search_query }}">
+                    {% endif %}
+                    {% if ventas.number %}
+                        <input type="hidden" name="page" value="{{ ventas.number }}">
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Paginación -->
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center mb-0">
+                    <!-- Botón Anterior -->
+                    {% if ventas.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+                        <a class="page-link"
+                           href="?page={{ ventas.previous_page_number }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            &laquo; Anterior
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Anterior</span>
                     </li>
                     {% endif %}
-                {% endfor %}
-                
-                {% if ventas.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ ventas.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-    </div>
-</div>
 
-<!-- Modal para detalles rápidos -->
-<div class="modal fade" id="detalleVentaModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Detalles de Venta</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="detalleVentaContent">
-                <!-- Contenido dinámico -->
-            </div>
+                    <!-- Números de páginas -->
+                    {% for i in ventas.paginator.page_range %}
+                        {% if ventas.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% elif i >= ventas.number|add:-2 and i <= ventas.number|add:2 %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ i }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Botón Siguiente -->
+                    {% if ventas.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ ventas.next_page_number }}&filas={{ filas_por_pagina }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            Siguiente &raquo;
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Siguiente &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                <p class="text-center text-muted mt-2 mb-0">
+                    Página {{ ventas.number }} de {{ ventas.paginator.num_pages }}
+                </p>
+            </nav>
         </div>
+
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <div class="empty-state-icon mb-3">
+                <i class="fas fa-cash-register fa-3x text-muted"></i>
+            </div>
+            <h3 class="empty-state-title">No hay ventas registradas</h3>
+            <p class="empty-state-message text-muted mb-4">
+                {% if search_query %}
+                    No se encontraron resultados para "{{ search_query }}"
+                {% else %}
+                    Comienza registrando tu primera venta en el sistema.
+                {% endif %}
+            </p>
+            <a href="{% url 'venta_create' %}" class="btn btn-primary-standard">
+                <i class="fas fa-plus-circle"></i> Crear Venta
+            </a>
+            {% if search_query %}
+                <a href="?" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-times"></i> Limpiar búsqueda
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -245,15 +271,20 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Calcular totales
-    $('tbody tr').each(function() {
-        var precio = parseFloat($(this).find('td:nth-child(4) strong').text().replace('$', ''));
-        var cantidad = parseInt($(this).find('.badge.bg-primary').text());
-        if (!isNaN(precio) && !isNaN(cantidad)) {
-            var total = precio * cantidad;
-            $(this).find('td:nth-child(6) strong').text('$' + total.toFixed(2));
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Cerrar modal de eliminación 
+    {% if action == 'delete' and venta_eliminar %}
+    $(document).on('click', function(e) {
+        if ($(e.target).hasClass('modal')) {
+            window.location.href = '?{% if search_query %}search={{ search_query }}{% endif %}';
         }
     });
+    {% endif %}
 });
 </script>
 {% endblock %}

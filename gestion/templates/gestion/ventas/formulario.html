@@ -1,178 +1,94 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
-{% block title %}{% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Venta{% endblock %}
+{% block module_name %}ventas{% endblock %}
+{% block title %}{% if venta %}Editar Venta{% else %}Nueva Venta{% endif %}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas {% if form.instance.pk %}fa-edit{% else %}fa-plus-circle{% endif %}"></i>
-        {% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Venta
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas {% if venta %}fa-edit{% else %}fa-plus-circle{% endif %}"></i>
+        {% if venta %}Editar Venta{% else %}Nueva Venta{% endif %}
     </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'venta_list' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Volver
-        </a>
-    </div>
+    <a href="{% url 'venta_list' %}" class="btn btn-secondary-standard">
+        <i class="fas fa-arrow-left"></i> Volver a Ventas
+    </a>
 </div>
 
 <div class="row">
     <div class="col-lg-8">
-        <div class="card shadow">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="fas fa-edit"></i> Información de la Venta</h5>
-            </div>
+        <div class="card card-form">
             <div class="card-body">
-                <form method="post" id="ventaForm">
+                <form method="post" id="ventaForm" class="needs-validation" novalidate>
                     {% csrf_token %}
-                    
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {% for error in form.non_field_errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    
-                    <div class="row">
-                        <!-- Producto -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-box text-primary"></i> Producto
-                                <span class="text-danger">*</span>
-                            </label>
-                            {{ form.id_producto|add_class:"form-select form-select-lg" }}
-                            {% if form.id_producto.errors %}
-                            <div class="text-danger small">{{ form.id_producto.errors }}</div>
-                            {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Producto <span class="text-danger">*</span></label>
+                            {{ form.id_producto|add_class:"form-select"|attr:"required" }}
                         </div>
-                        
-                        <!-- Cliente -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-user text-success"></i> Cliente
-                            </label>
-                            {{ form.id_cliente|add_class:"form-select form-select-lg" }}
-                            <div class="form-text">Opcional - puede ser venta sin cliente registrado</div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cliente</label>
+                            {{ form.id_cliente|add_class:"form-select" }}
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <!-- Precio Unitario -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-tag text-warning"></i> Precio Unitario
-                                <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text">$</span>
-                                {{ form.precio|add_class:"form-control"|attr:"step:0.01" }}
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Precio Unitario <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">C$</span>
+                                {{ form.precio|add_class:"form-control"|attr:"step:0.01"|attr:"required" }}
                             </div>
-                            {% if form.precio.errors %}
-                            <div class="text-danger small">{{ form.precio.errors }}</div>
-                            {% endif %}
+                            <div class="form-text">Precio por unidad</div>
                         </div>
-                        
-                        <!-- Cantidad -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-cubes text-info"></i> Cantidad
-                                <span class="text-danger">*</span>
-                            </label>
-                            {{ form.cantidad|add_class:"form-control form-control-lg"|attr:"min:1" }}
-                            {% if form.cantidad.errors %}
-                            <div class="text-danger small">{{ form.cantidad.errors }}</div>
-                            {% endif %}
+                        <div class="col-md-4">
+                            <label class="form-label">Cantidad <span class="text-danger">*</span></label>
+                            {{ form.cantidad|add_class:"form-control"|attr:"min:1"|attr:"required" }}
                         </div>
-                        
-                        <!-- Total Calculado -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-calculator text-danger"></i> Total
-                            </label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text">$</span>
-                                <input type="text" class="form-control form-control-lg bg-light" 
-                                       id="totalVenta" value="0.00" readonly>
+                        <div class="col-md-4">
+                            <label class="form-label">Total</label>
+                            <div class="input-group">
+                                <span class="input-group-text">C$</span>
+                                <input type="text" class="form-control bg-light" id="totalVenta" 
+                                       value="{% if venta %}{{ venta.total|floatformat:2 }}{% else %}0.00{% endif %}" readonly>
                             </div>
-                            <div class="form-text">Calculado automáticamente</div>
+                            <div class="form-text">Se calcula automáticamente</div>
                         </div>
                     </div>
-                    
-                    <!-- Información Adicional -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6 class="card-title">
-                                        <i class="fas fa-info-circle text-primary"></i> Información Adicional
-                                    </h6>
-                                    {% if form.instance.pk %}
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <p class="mb-1"><strong>ID Venta:</strong> #{{ form.instance.id_venta }}</p>
-                                            <p class="mb-1"><strong>Creado:</strong> {{ form.instance.fecha_creacion|date:"d/m/Y H:i" }}</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p class="mb-1"><strong>Última modificación:</strong> {{ form.instance.fecha_actualizacion|date:"d/m/Y H:i" }}</p>
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <p class="mb-0">Esta venta será registrada con la fecha y hora actual.</p>
-                                    {% endif %}
-                                </div>
-                            </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Precio Recomendado</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">C$</span>
+                            <input type="text" class="form-control" id="precioRecomendado" readonly>
                         </div>
+                        <button type="button" id="usarRecomendado" class="btn btn-outline-primary btn-sm">
+                            Usar Precio Recomendado
+                        </button>
                     </div>
-                    
-                    <!-- Botones -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between">
-                                <button type="submit" class="btn btn-success btn-lg">
-                                    <i class="fas fa-save"></i> {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %} Venta
-                                </button>
-                                <a href="{% url 'venta_list' %}" class="btn btn-outline-secondary btn-lg">
-                                    <i class="fas fa-times"></i> Cancelar
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+
+                    <button type="submit" class="btn btn-primary-standard">
+                        <i class="fas fa-save"></i> 
+                        {% if venta %}Actualizar Venta{% else %}Guardar Venta{% endif %}
+                    </button>
                 </form>
             </div>
         </div>
     </div>
-    
-    <!-- Panel de Ayuda -->
+
+    <!-- Panel lateral de últimas ventas -->
     <div class="col-lg-4">
-        <div class="card shadow">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-question-circle"></i> Ayuda</h5>
-            </div>
+        <div class="card card-list">
+            <div class="card-header"><h5>Últimas Ventas</h5></div>
             <div class="card-body">
-                <h6><i class="fas fa-lightbulb text-warning"></i> Consejos:</h6>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Verifica el stock antes de vender</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> El precio debe incluir impuestos</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Registra al cliente para seguimiento</li>
-                </ul>
-                
-                <h6 class="mt-4"><i class="fas fa-history text-primary"></i> Últimas Ventas</h6>
-                <div class="list-group list-group-flush">
-                    {% for venta in ultimas_ventas|slice:":3" %}
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <small>{{ venta.id_producto.nombre|truncatechars:20 }}</small>
-                            <small class="text-success">${{ venta.precio|floatformat:2 }}</small>
-                        </div>
-                        <small class="text-muted">{{ venta.fecha_creacion|timesince }} atrás</small>
-                    </div>
-                    {% empty %}
-                    <div class="list-group-item text-muted">
-                        <small>No hay ventas recientes</small>
-                    </div>
-                    {% endfor %}
+                {% for venta in ultimas_ventas %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ venta.id_producto.nombre }}</span>
+                    <span>C${{ venta.total|floatformat:2 }} ({{ venta.cantidad }})</span>
                 </div>
+                {% empty %}
+                <small>No hay ventas recientes</small>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -181,38 +97,48 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Calcular total automáticamente
-    function calcularTotal() {
-        var precio = parseFloat($('#id_precio').val()) || 0;
-        var cantidad = parseInt($('#id_cantidad').val()) || 0;
-        var total = precio * cantidad;
-        $('#totalVenta').val(total.toFixed(2));
+document.addEventListener('DOMContentLoaded', function() {
+    // Diccionario de precios 
+    const preciosRecomendados = {{ precios_recomendados|safe }};
+
+    const productoSelect = document.getElementById('id_id_producto');
+    const precioInput = document.getElementById('id_precio');
+    const cantidadInput = document.getElementById('id_cantidad');
+    const totalInput = document.getElementById('totalVenta');
+    const precioRecomendadoInput = document.getElementById('precioRecomendado');
+    const usarRecomendadoBtn = document.getElementById('usarRecomendado');
+
+    function actualizarPrecioRecomendado() {
+        const productoId = productoSelect.value;
+        if (productoId in preciosRecomendados) {
+            const recomendado = parseFloat(preciosRecomendados[productoId]) || 0;
+            precioRecomendadoInput.value = recomendado.toFixed(2);
+        } else {
+            precioRecomendadoInput.value = '0.00';
+        }
     }
-    
-    $('#id_precio, #id_cantidad').on('input', calcularTotal);
-    
-    // Validación antes de enviar
-    $('#ventaForm').on('submit', function(e) {
-        var cantidad = parseInt($('#id_cantidad').val());
-        var precio = parseFloat($('#id_precio').val());
-        
-        if (cantidad <= 0) {
-            alert('La cantidad debe ser mayor a 0');
-            e.preventDefault();
-            return false;
-        }
-        
-        if (precio <= 0) {
-            alert('El precio debe ser mayor a 0');
-            e.preventDefault();
-            return false;
-        }
-        
-        return true;
-    });
-    
-    // Calcular al cargar
+
+    function calcularTotal() {
+        const precio = parseFloat(precioInput.value) || 0;
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        const total = precio * cantidad;
+        totalInput.value = total.toFixed(2);
+    }
+
+    function usarPrecioRecomendado() {
+        const recomendado = parseFloat(precioRecomendadoInput.value) || 0;
+        precioInput.value = recomendado.toFixed(2);
+        calcularTotal();
+    }
+
+    // Event listeners
+    productoSelect.addEventListener('change', actualizarPrecioRecomendado);
+    precioInput.addEventListener('input', calcularTotal);
+    cantidadInput.addEventListener('input', calcularTotal);
+    usarRecomendadoBtn.addEventListener('click', usarPrecioRecomendado);
+
+    // Inicializar
+    actualizarPrecioRecomendado();
     calcularTotal();
 });
 </script>

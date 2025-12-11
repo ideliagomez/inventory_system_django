@@ -1,77 +1,119 @@
-<!-- gestion/templates/gestion/includes/sidebar.html -->
-<div class="position-sticky pt-3">
+<!-- Sidebar -->
+<div class="sidebar position-sticky pt-3">
+
+    <!-- Menú principal -->
     <ul class="nav flex-column">
+
+        <!-- Sección: INICIO -->
         <li class="nav-item">
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span>INICIO</span>
-            </h6>
+            <h6 class="sidebar-heading">INICIO</h6>
         </li>
-        
-        <!-- DASHBOARD -->
+
+        <!-- Dashboard -->
         <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
-               href="{% url 'dashboard' %}">
-                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            {% url 'dashboard' as dashboard_url %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+               href="{{ dashboard_url }}">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
             </a>
         </li>
-        
-        <!-- INVENTARIO -->
+
+        <!-- Sección: INVENTARIO -->
         <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.url_name == 'inventario_list' %}active{% endif %}" 
-               href="{% url 'inventario_list' %}">
-                <i class="fas fa-boxes me-2"></i> Inventario
+            <h6 class="sidebar-heading">INVENTARIO</h6>
+        </li>
+
+        <!-- Inventario -->
+        <li class="nav-item">
+            {% url 'inventario_list' as inventario_url %}
+            <a class="nav-link
+                {% if 'inventario' in request.resolver_match.url_name %}
+                    active
+                {% endif %}"
+               href="{{ inventario_url }}">
+                <i class="fas fa-boxes"></i>
+                Inventario
             </a>
         </li>
-        
-        <!-- CATÁLOGO -->
+
+        <!-- Catálogo -->
         <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.url_name == 'catalogo' %}active{% endif %}" 
-               href="{% url 'catalogo' %}">
-                <i class="fas fa-book me-2"></i> Catálogo
+            {% url 'catalogo' as catalogo_url %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'catalogo' %}active{% endif %}"
+               href="{{ catalogo_url }}">
+                <i class="fas fa-book"></i>
+                Catálogo
             </a>
         </li>
-        
+
+        <!-- Sección: OPERACIONES -->
         <li class="nav-item">
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span>OPERACIONES</span>
-            </h6>
+            <h6 class="sidebar-heading">OPERACIONES</h6>
         </li>
-        
-        <!-- COMPRAS -->
+
+        <!-- Compras -->
         <li class="nav-item">
-            {% with url_name=request.resolver_match.url_name %}
-            <a class="nav-link 
-               {% if 'compra' in url_name and 'historial_precio' not in url_name %}active{% endif %}" 
-               href="{% url 'compra_list' %}">
-                <i class="fas fa-shopping-cart me-2"></i> Compras
+            {% url 'compra_list' as compra_url %}
+            <a class="nav-link
+                {% if 'compra_' in request.resolver_match.url_name %}
+                    active
+                {% endif %}"
+               href="{{ compra_url }}">
+                <i class="fas fa-shopping-cart"></i>
+                Compras
             </a>
-            {% endwith %}
         </li>
-        
-        <!-- VENTAS -->
+
+        <!-- Ventas -->
         <li class="nav-item">
-            {% with url_name=request.resolver_match.url_name %}
-            <a class="nav-link 
-               {% if 'venta' in url_name and 'inventario' not in url_name %}active{% endif %}" 
-               href="{% url 'venta_list' %}">
-                <i class="fas fa-cash-register me-2"></i> Ventas
+            {% url 'venta_list' as venta_url %}
+            <a class="nav-link
+                {% if 'venta_' in request.resolver_match.url_name %}
+                    active
+                {% endif %}"
+               href="{{ venta_url }}">
+                <i class="fas fa-cash-register"></i>
+                Ventas
             </a>
-            {% endwith %}
         </li>
-        
+
+        <!-- Sección: CONFIGURACIÓN -->
         <li class="nav-item">
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span>CONFIGURACIÓN</span>
-            </h6>
+            <h6 class="sidebar-heading">CONFIGURACIÓN</h6>
         </li>
-        
-        <!-- HISTORIAL PRECIOS -->
+
+        <!-- Historial Precios -->
         <li class="nav-item">
-            <a class="nav-link 
-               {% if 'historial_precio' in request.resolver_match.url_name %}active{% endif %}" 
-               href="{% url 'historial_precio_list' %}">
-                <i class="fas fa-chart-line me-2"></i> Historial Precios
+            {% url 'historial_precio_list' as historial_url %}
+            <a class="nav-link
+                {% if 'historial_precio' in request.resolver_match.url_name %}
+                    active
+                {% endif %}"
+               href="{{ historial_url }}">
+                <i class="fas fa-chart-line"></i>
+                Historial Precios
+            </a>
+        </li>
+
+         <!-- Análisis de Ventas: -->
+        <li class="nav-item">
+            <a class="nav-link {% if module_name == 'analisis_ventas' %}active{% endif %}" 
+                href="{% url 'analisis_ventas_list' %}">
+                <i class="fas fa-chart-line"></i> Análisis Ventas
             </a>
         </li>
     </ul>
+
+    <!-- Información del sistema -->
+    <div class="mt-4 px-3">
+        <div class="system-info-card p-3">
+            <small class="d-block">
+                <i class="fas fa-info-circle me-1"></i> Sistema v1.0.0
+            </small>
+            <small>
+                <i class="far fa-clock me-1"></i> {% now "H:i" %}
+            </small>
+        </div>
+    </div>
 </div>
