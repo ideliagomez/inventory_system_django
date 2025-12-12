@@ -1,5 +1,6 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, Max  
@@ -12,6 +13,32 @@ from .utils import get_inventario_data, get_estadisticas_inventario
 from django.db.models import Sum, F, DecimalField
 from django.db.models.functions import TruncDate, Cast
 from decimal import Decimal
+from django.contrib.auth.models import User
+
+# -------------------- Usuario Demo -------------------- #
+def autenticar_usuario_demo(request):
+    """Autentica automáticamente al usuario demo si las credenciales coinciden"""
+    user_demo = os.environ.get('USER_DEMO')
+    password_demo = os.environ.get('PASSWORD_DEMO')
+    
+    if not user_demo or not password_demo:
+        return None  
+    
+    # Crear o obtener usuario demo    
+    user, created = User.objects.get_or_create(
+        username=user_demo,
+        defaults={
+            'email': f'{user_demo}@demo.com',
+            'is_staff': False,
+            'is_superuser': False
+        }
+    )
+    
+    if created:
+        user.set_password(password_demo)
+        user.save()
+    
+    return user
 
 # -------------------- Paginación y Filtrado -------------------- #
 def paginar_queryset(request, queryset, default_filas=10):
@@ -41,6 +68,18 @@ def paginar_queryset(request, queryset, default_filas=10):
     }
     
     return context
+
+def login_demo(request):
+    """Vista especial para login automático demo"""
+    user = autenticar_usuario_demo(request)
+    
+    if user:
+        # Autenticar y loguear al usuario
+        login(request, user)
+        return redirect('Login Demo')  
+    else:
+        from django.http import HttpResponse
+        return HttpResponse("Demo no configurado", status=500)
 
 
 # -------------------- Registro y Dashboard -------------------- #

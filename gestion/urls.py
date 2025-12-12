@@ -2,6 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    #Demo
+    path('demo-login/', views.login_demo, name='login_demo'),
+
+    #Dashboard
     path('', views.dashboard, name='dashboard'),
     
     # Compras
