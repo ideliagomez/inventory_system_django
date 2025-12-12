@@ -1,3 +1,5 @@
 Django>=4.2
 django-widget-tweaks
 python-decouple
+gunicorn
+whitenoise
