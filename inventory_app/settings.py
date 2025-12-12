@@ -4,18 +4,18 @@ Django settings for inventory_system project.
 import os
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-clave-temporal')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ["inventory-system-3614.onrender.com"]
-
+ALLOWED_HOSTS = ["inventory-system-3614.onrender.com", "localhost", "127.0.0.1"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -28,10 +28,12 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'widget_tweaks',
     'gestion',
+    'whitenoise.runserver_nostatic',  
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Debe ser el SEGUNDO
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,16 +60,33 @@ TEMPLATES = [
     },
 ]
 
-# inventory_app/settings.py (corrección WSGI)
-WSGI_APPLICATION = 'inventory_app.wsgi.application'  
+
+WSGI_APPLICATION = 'inventory_app.wsgi.application'
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+# Configuración de base de datos para Render (PostgreSQL) con fallback a SQLite
+DATABASE_URL = config('DATABASE_URL', default='')
+
+if DATABASE_URL:
+    # Usar PostgreSQL en producción (Render)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True  
+        )
     }
-}
+else:
+    # SQLite para desarrollo local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -96,6 +115,9 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Configuración de WhiteNoise para archivos estáticos
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -103,7 +125,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
-
-MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
-
-
