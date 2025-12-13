@@ -16,29 +16,24 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 
 # -------------------- Usuario Demo -------------------- #
-def autenticar_usuario_demo(request):
-    """Autentica automáticamente al usuario demo si las credenciales coinciden"""
-    user_demo = os.environ.get('USER_DEMO')
-    password_demo = os.environ.get('PASSWORD_DEMO')
+def login_demo(request):
+    try:
+        user = User.objects.get(username='demo')
+    except User.DoesNotExist:
+        # Si no existe, error claro
+        return HttpResponse("""
+        <h1>Error: Usuario demo no configurado</h1>
+        <p>El usuario 'demo' no existe en la base de datos.</p>
+        <p>Contacta al administrador o crea el usuario manualmente:</p>
+        <pre>
+        python manage.py shell
+        >>> from django.contrib.auth.models import User
+        >>> User.objects.create_user('demo', 'demo@demo.com', 'DemoPass123!', is_staff=False, is_superuser=False)
+        </pre>
+        """, status=500)
     
-    if not user_demo or not password_demo:
-        return None  
-    
-    # Crear o obtener usuario demo    
-    user, created = User.objects.get_or_create(
-        username=user_demo,
-        defaults={
-            'email': f'{user_demo}@demo.com',
-            'is_staff': False,
-            'is_superuser': False
-        }
-    )
-    
-    if created:
-        user.set_password(password_demo)
-        user.save()
-    
-    return user
+    login(request, user)
+    return redirect('dashboard')
 
 # -------------------- Paginación y Filtrado -------------------- #
 def paginar_queryset(request, queryset, default_filas=10):
@@ -70,16 +65,29 @@ def paginar_queryset(request, queryset, default_filas=10):
     return context
 
 def login_demo(request):
-    """Vista especial para login automático demo"""
-    user = autenticar_usuario_demo(request)
+    """Login demo - simplemente loguea al usuario demo existente"""
     
-    if user:
-        # Autenticar y loguear al usuario
-        login(request, user)
-        return redirect('Login Demo')  
-    else:
-        from django.http import HttpResponse
-        return HttpResponse("Demo no configurado", status=500)
+    # 1. Buscar usuario demo por username
+    try:
+        user = User.objects.get(username='demo')
+    except User.DoesNotExist:
+        # Si no existe, error claro
+        return HttpResponse("""
+        <h1>Error: Usuario demo no configurado</h1>
+        <p>El usuario 'demo' no existe en la base de datos.</p>
+        <p>Contacta al administrador o crea el usuario manualmente:</p>
+        <pre>
+        python manage.py shell
+        >>> from django.contrib.auth.models import User
+        >>> User.objects.create_user('demo', 'demo@demo.com', 'DemoPass123!', is_staff=False, is_superuser=False)
+        </pre>
+        """, status=500)
+    
+    # 2. Hacer login directamente
+    login(request, user)
+    
+    # 3. Redirigir al dashboard
+    return redirect('dashboard')
 
 
 # -------------------- Registro y Dashboard -------------------- #
