@@ -14,22 +14,17 @@ from django.db.models import Sum, F, DecimalField
 from django.db.models.functions import TruncDate, Cast
 from decimal import Decimal
 from django.contrib.auth.models import User
+from django.http import HttpResponse  
 
 # -------------------- Usuario Demo -------------------- #
 def login_demo(request):
     try:
         user = User.objects.get(username='demo')
     except User.DoesNotExist:
-        # Si no existe, error claro
         return HttpResponse("""
         <h1>Error: Usuario demo no configurado</h1>
         <p>El usuario 'demo' no existe en la base de datos.</p>
         <p>Contacta al administrador o crea el usuario manualmente:</p>
-        <pre>
-        python manage.py shell
-        >>> from django.contrib.auth.models import User
-        >>> User.objects.create_user('demo', 'demo@demo.com', 'DemoPass123!', is_staff=False, is_superuser=False)
-        </pre>
         """, status=500)
     
     login(request, user)
@@ -63,32 +58,6 @@ def paginar_queryset(request, queryset, default_filas=10):
     }
     
     return context
-
-def login_demo(request):
-    """Login demo - simplemente loguea al usuario demo existente"""
-    
-    # 1. Buscar usuario demo por username
-    try:
-        user = User.objects.get(username='demo')
-    except User.DoesNotExist:
-        # Si no existe, error claro
-        return HttpResponse("""
-        <h1>Error: Usuario demo no configurado</h1>
-        <p>El usuario 'demo' no existe en la base de datos.</p>
-        <p>Contacta al administrador o crea el usuario manualmente:</p>
-        <pre>
-        python manage.py shell
-        >>> from django.contrib.auth.models import User
-        >>> User.objects.create_user('demo', 'demo@demo.com', 'DemoPass123!', is_staff=False, is_superuser=False)
-        </pre>
-        """, status=500)
-    
-    # 2. Hacer login directamente
-    login(request, user)
-    
-    # 3. Redirigir al dashboard
-    return redirect('dashboard')
-
 
 # -------------------- Registro y Dashboard -------------------- #
 def register(request):
@@ -143,7 +112,7 @@ def dashboard(request):
         'compras_mes': compras_mes['total'] or 0,
         'ventas_mes': ventas_mes['total'] or 0,
         'productos_mas_vendidos': productos_mas_vendidos,
-        'ultimas_compras': ultimas_compras,  # Agregar esto
+        'ultimas_compras': ultimas_compras,  
     }
     
     return render(request, 'gestion/dashboard.html', context)
@@ -433,7 +402,7 @@ def inventario_list(request):
         'productos_criticos': estadisticas['productos_criticos'],
         'productos_agotados': estadisticas['productos_agotados'],
         'ahora': timezone.now(),
-        'opciones_filas': [5, 10, 20, 50, 100],  # Opciones para mostrar por página
+        'opciones_filas': [5, 10, 20, 50, 100],  
     }
     return render(request, 'gestion/inventario/lista.html', context)
 
