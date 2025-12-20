@@ -1,8 +1,5 @@
 # Sistema de Gestión de Inventario - Django
 
-## Enlace de Producción
-**https://inventory-ke5c.onrender.com**
-
 ## Descripción General
 Sistema web completo para la gestión integral de inventarios, desarrollado con Django. Controla todas las operaciones de un negocio: compras, ventas, inventario, catálogos y análisis en tiempo real.
 
